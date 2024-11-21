@@ -1,137 +1,116 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart'; // Import intl untuk format Rupiah
-import 'input_transaction_screen.dart';
-import 'transaction_history_screen.dart';
-import 'stats_screen.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:intl/intl.dart';
 
 class DashboardScreen extends StatefulWidget {
+  final List<Map<String, String>> transactions;
+
+  DashboardScreen({required this.transactions});
+
   @override
   _DashboardScreenState createState() => _DashboardScreenState();
 }
 
 class _DashboardScreenState extends State<DashboardScreen> {
-  List<Map<String, String>> transactions = [];
+  bool _isVisible = true; // Status untuk menentukan apakah nominal terlihat
 
-  // Formatter Rupiah
-  final NumberFormat _rupiahFormatter = NumberFormat.currency(
-    locale: 'id_ID',
-    symbol: 'Rp ',
-    decimalDigits: 0,
-  );
-
-  // Hitung total saldo
-  int _calculateTotalBalance() {
-    int total = 5000000; // Awal saldo (contoh Rp 5.000.000)
-    for (var transaction in transactions) {
-      total -= int.parse(transaction['amount']!); // Kurangi pengeluaran
-    }
-    return total;
-  }
-
-  // Tambahkan transaksi baru
-  void _addTransaction(Map<String, String> transaction) {
-    setState(() {
-      transactions.add(transaction);
-    });
+  String _calculateTotal() {
+    int total = widget.transactions.fold(
+      0,
+      (sum, item) => sum + int.parse(item['amount']!),
+    );
+    final formatter = NumberFormat.currency(locale: 'id_ID', symbol: 'Rp ', decimalDigits: 0);
+    return formatter.format(total);
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.blue[300],
       appBar: AppBar(
-        title: const Text('Dashboard'),
-        backgroundColor: Colors.blueAccent,
-      ),
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [Colors.blue.shade300, Colors.blue.shade800],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
+        automaticallyImplyLeading: false, // Menghilangkan tombol kembali
+        title: const Text(
+          'Dashboard',
+          style: TextStyle(
+            color: Colors.white, // Mengatur warna teks menjadi putih
+            fontSize: 20, // (Opsional) Mengatur ukuran teks
+            fontWeight: FontWeight.w700, // (Opsional) Menambahkan efek tebal
           ),
         ),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+      ),
+      body: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 20.0),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            // Kartu Saldo Total
-            Card(
-              margin: const EdgeInsets.all(20),
-              elevation: 8,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-              ),
-              color: Colors.white,
-              child: Padding(
-                padding: const EdgeInsets.all(24.0),
-                child: Column(
-                  children: <Widget>[
-                    Text(
-                      'Total Balance',
-                      style: TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.blue.shade700,
-                      ),
-                    ),
-                    Text(
-                      _rupiahFormatter.format(_calculateTotalBalance()),
-                      style: TextStyle(
-                        fontSize: 36,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.blue.shade800,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            const SizedBox(height: 20),
+            const Text(
+              "Welcome, User!",
+              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white),
             ),
-
-            // Tombol Navigasi
+            const SizedBox(height: 10),
+            const Text(
+              "Expenses Total:",
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.normal, color: Colors.white),
+            ),
+            const SizedBox(height: 5),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
-              children: <Widget>[
-                IconButton(
-                  icon: const Icon(FontAwesomeIcons.plusCircle, size: 40, color: Colors.white),
-                  onPressed: () async {
-                    final result = await Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => InputTransactionScreen(),
-                      ),
-                    );
-
-                    if (result != null) {
-                      _addTransaction(result);
-                    }
-                  },
+              children: [
+                Text(
+                  _isVisible ? _calculateTotal() : "*******",
+                  style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.white),
                 ),
-                const SizedBox(width: 20),
+                const SizedBox(width: 10),
                 IconButton(
-                  icon: const Icon(FontAwesomeIcons.history, size: 40, color: Colors.white),
+                  icon: Icon(
+                    _isVisible ? Icons.visibility : Icons.visibility_off,
+                    color: Colors.white,
+                  ),
                   onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) =>
-                            TransactionHistoryScreen(transactions: transactions),
-                      ),
-                    );
-                  },
-                ),
-                const SizedBox(width: 20),
-                IconButton(
-                  icon: const Icon(FontAwesomeIcons.chartPie, size: 40, color: Colors.white),
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => StatsScreen(transactions: transactions),
-                      ),
-                    );
+                    setState(() {
+                      _isVisible = !_isVisible;
+                    });
                   },
                 ),
               ],
+            ),
+            const SizedBox(height: 40),
+            _buildMenuButton(context, "Input Transactions", Icons.edit, '/inputTransactions'),
+            _buildMenuButton(context, "History", Icons.history, '/history'),
+            _buildMenuButton(context, "Expenses Statistics", Icons.bar_chart, '/expensesStatistics'),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMenuButton(BuildContext context, String title, IconData icon, String route) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 10),
+      child: ElevatedButton(
+        style: ElevatedButton.styleFrom(
+          foregroundColor: Colors.black,
+          backgroundColor: Colors.white,
+          shadowColor: Colors.black45,
+          elevation: 4,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
+        ),
+        onPressed: () => Navigator.pushNamed(context, route),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.start,
+          children: [
+            Icon(icon, color: Colors.blue[300]),
+            const SizedBox(width: 20),
+            Text(
+              title,
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Colors.blue[300], // Mengatur warna teks menjadi biru
+              ),
             ),
           ],
         ),

@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart'; // Import intl untuk format Rupiah
+import 'package:intl/intl.dart';
 
 class TransactionHistoryScreen extends StatelessWidget {
   final List<Map<String, String>> transactions;
+  final void Function(int) onDeleteTransaction;
 
-  const TransactionHistoryScreen({required this.transactions, super.key});
+  TransactionHistoryScreen({
+    required this.transactions,
+    required this.onDeleteTransaction,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -41,7 +45,12 @@ class TransactionHistoryScreen extends StatelessWidget {
                     child: ListTile(
                       leading: const Icon(Icons.category, color: Colors.blueAccent),
                       title: Text(transaction['category']!),
-                      subtitle: Text(_rupiahFormatter.format(int.parse(transaction['amount']!))),
+                      subtitle: Text(
+                          '${_rupiahFormatter.format(int.parse(transaction['amount']!))} - ${transaction['date']}'),
+                      trailing: IconButton(
+                        icon: const Icon(Icons.delete, color: Colors.red),
+                        onPressed: () => onDeleteTransaction(index),
+                      ),
                     ),
                   );
                 },
