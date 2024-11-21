@@ -51,7 +51,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ),
             const SizedBox(height: 10),
             const Text(
-              "Expenses Total:",
+              "Total Balance",
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.normal, color: Colors.white),
             ),
             const SizedBox(height: 5),

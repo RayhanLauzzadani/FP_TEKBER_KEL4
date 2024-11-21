@@ -14,6 +14,7 @@ dependencies:
   pie_chart: ^5.0.0  # Untuk statistik pengeluaran
   font_awesome_flutter: ^10.0.0  # Untuk ikon navigasi
   intl: ^0.18.0  # Untuk format angka dalam Rupiah
+  country_flags: ^3.0.0
 
 dev_dependencies:
   flutter_test:

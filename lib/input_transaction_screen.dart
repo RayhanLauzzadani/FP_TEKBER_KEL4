@@ -52,8 +52,8 @@ class _InputTransactionScreenState extends State<InputTransactionScreen> {
         'date': formattedDate,
         'currency': _selectedCurrencySymbol,
       };
-      widget.onSaveTransaction(transaction); // Simpan transaksi
-      Navigator.pop(context); // Kembali ke halaman sebelumnya
+      widget.onSaveTransaction(transaction);
+      Navigator.pop(context);
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -82,7 +82,7 @@ class _InputTransactionScreenState extends State<InputTransactionScreen> {
     setState(() {
       _selectedCountry = country;
       _selectedCurrencySymbol = countryCurrencyList
-              .firstWhere((element) => element['country'] == country)['symbol'] ??
+              .firstWhere((element) => element['country'] == country)['symbol'] ?? 
           '';
     });
   }
@@ -96,110 +96,167 @@ class _InputTransactionScreenState extends State<InputTransactionScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.blue.shade200, // Latar belakang biru muda
       appBar: AppBar(
         title: const Text('Input Transaction'),
-        backgroundColor: Colors.blueAccent,
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        iconTheme: const IconThemeData(color: Colors.white), // Icon back putih
+        titleTextStyle: const TextStyle(color: Colors.white, fontSize: 20),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            children: [
-              // Country Dropdown
-              DropdownButtonFormField<String>(
-                value: _selectedCountry,
-                hint: const Text('Select Country'),
-                decoration: const InputDecoration(
-                  labelText: 'Country',
-                  border: OutlineInputBorder(),
-                ),
-                items: countryCurrencyList.map<DropdownMenuItem<String>>((item) {
-                  return DropdownMenuItem<String>(
-                    value: item['country'],
-                    child: Text(item['country']!),
-                  );
-                }).toList(),
-                onChanged: _onCountrySelected,
-                validator: (value) =>
-                    value == null ? 'Please select a country' : null,
-              ),
-              const SizedBox(height: 20),
-              // Category Dropdown
-              DropdownButtonFormField<String>(
-                value: _selectedCategory,
-                hint: const Text('Select Category'),
-                decoration: const InputDecoration(
-                  labelText: 'Category',
-                  border: OutlineInputBorder(),
-                ),
-                items: categoryList.map<DropdownMenuItem<String>>((item) {
-                  return DropdownMenuItem<String>(
-                    value: item['category'],
-                    child: Row(
-                      children: [
-                        Icon(item['icon'], color: Colors.blue),
-                        const SizedBox(width: 10),
-                        Text(item['category']!),
-                      ],
+        child: Container(
+          decoration: BoxDecoration(
+            color: Colors.white, // Warna latar form tetap putih
+            borderRadius: BorderRadius.circular(16), // Sudut membulat
+            border: Border.all(
+              color: Colors.blue[300]!, // Warna border biru 300
+              width: 2, // Lebar border
+            ),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(20.0),
+            child: Form(
+              key: _formKey,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  // Country Dropdown
+                  DropdownButtonFormField<String>(
+                    value: _selectedCountry,
+                    hint: const Text('Select Country'),
+                    decoration: InputDecoration(
+                      labelText: 'Country',
+                      labelStyle: TextStyle(color: Colors.blue[300]), // Warna label
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: BorderSide(color: Colors.blue[300]!),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderSide: BorderSide(color: Colors.blue[300]!),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderSide: BorderSide(color: Colors.blue[300]!, width: 2),
+                      ),
                     ),
-                  );
-                }).toList(),
-                onChanged: _onCategorySelected,
-                validator: (value) =>
-                    value == null ? 'Please select a category' : null,
-              ),
-              const SizedBox(height: 20),
-              // Amount with Currency Symbol
-              TextFormField(
-                controller: _amountController,
-                decoration: InputDecoration(
-                  labelText: 'Amount',
-                  prefixText: _selectedCurrencySymbol,
-                  border: const OutlineInputBorder(),
-                ),
-                keyboardType: TextInputType.number,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter an amount';
-                  }
-                  if (int.tryParse(value) == null) {
-                    return 'Amount must be a number';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 20),
-              // Date Picker
-              GestureDetector(
-                onTap: _pickDate,
-                child: InputDecorator(
-                  decoration: InputDecoration(
-                    labelText: 'Date',
-                    border: OutlineInputBorder(),
-                    suffixIcon: IconButton(
-                      icon: const Icon(Icons.calendar_today),
-                      onPressed: _pickDate,
+                    items: countryCurrencyList.map<DropdownMenuItem<String>>((item) {
+                      return DropdownMenuItem<String>(
+                        value: item['country'],
+                        child: Text(item['country']!),
+                      );
+                    }).toList(),
+                    onChanged: _onCountrySelected,
+                    validator: (value) =>
+                        value == null ? 'Please select a country' : null,
+                  ),
+                  const SizedBox(height: 20),
+                  // Category Dropdown
+                  DropdownButtonFormField<String>(
+                    value: _selectedCategory,
+                    hint: const Text('Select Category'),
+                    decoration: InputDecoration(
+                      labelText: 'Category',
+                      labelStyle: TextStyle(color: Colors.blue[300]), // Warna label
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: BorderSide(color: Colors.blue[300]!),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderSide: BorderSide(color: Colors.blue[300]!),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderSide: BorderSide(color: Colors.blue[300]!, width: 2),
+                      ),
+                    ),
+                    items: categoryList.map<DropdownMenuItem<String>>((item) {
+                      return DropdownMenuItem<String>(
+                        value: item['category'],
+                        child: Row(
+                          children: [
+                            Icon(item['icon'], color: Colors.blue[300]),
+                            const SizedBox(width: 10),
+                            Text(item['category']!),
+                          ],
+                        ),
+                      );
+                    }).toList(),
+                    onChanged: _onCategorySelected,
+                    validator: (value) =>
+                        value == null ? 'Please select a category' : null,
+                  ),
+                  const SizedBox(height: 20),
+                  // Amount with Currency Symbol
+                  TextFormField(
+                    controller: _amountController,
+                    decoration: InputDecoration(
+                      labelText: 'Amount',
+                      labelStyle: TextStyle(color: Colors.blue[300]), // Warna label
+                      prefixText: _selectedCurrencySymbol,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: BorderSide(color: Colors.blue[300]!),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderSide: BorderSide(color: Colors.blue[300]!),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderSide: BorderSide(color: Colors.blue[300]!, width: 2),
+                      ),
+                    ),
+                    keyboardType: TextInputType.number,
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Please enter an amount';
+                      }
+                      if (int.tryParse(value) == null) {
+                        return 'Amount must be a number';
+                      }
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 20),
+                  // Date Picker
+                  GestureDetector(
+                    onTap: _pickDate,
+                    child: InputDecorator(
+                      decoration: InputDecoration(
+                        labelText: 'Date',
+                        labelStyle: TextStyle(color: Colors.blue[300]), // Warna label
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: BorderSide(color: Colors.blue[300]!),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderSide: BorderSide(color: Colors.blue[300]!),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderSide: BorderSide(color: Colors.blue[300]!, width: 2),
+                        ),
+                        suffixIcon: Icon(Icons.calendar_today, color: Colors.blue[300]), // Icon kalender biru
+                      ),
+                      child: Text(
+                        formattedDate,
+                        style: TextStyle(
+                          color: _selectedDate != null ? Colors.black87 : Colors.grey,
+                        ),
+                      ),
                     ),
                   ),
-                  child: Text(
-                    formattedDate,
-                    style: TextStyle(
-                      color: _selectedDate != null ? Colors.black87 : Colors.grey,
+                  const SizedBox(height: 30),
+                  // Save Button
+                  ElevatedButton(
+                    onPressed: _saveTransaction,
+                    style: ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
+                      backgroundColor: Colors.blue[300], // Warna button biru
+                      foregroundColor: Colors.white, // Warna teks putih
                     ),
+                    child: const Text('Save Transaction'),
                   ),
-                ),
+                ],
               ),
-              const SizedBox(height: 30),
-              // Save Button
-              ElevatedButton(
-                onPressed: _saveTransaction,
-                style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
-                ),
-                child: const Text('Save Transaction'),
-              ),
-            ],
+            ),
           ),
         ),
       ),

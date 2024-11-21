@@ -10,6 +10,14 @@ class TransactionHistoryScreen extends StatelessWidget {
     required this.onDeleteTransaction,
   });
 
+  // Mapping kategori ke ikon yang sesuai
+  final Map<String, IconData> categoryIcons = {
+    'Akomodasi': Icons.hotel,
+    'Food': Icons.fastfood,
+    'Transport': Icons.directions_car,
+    'Shopping': Icons.shopping_bag,
+  };
+
   @override
   Widget build(BuildContext context) {
     final NumberFormat _rupiahFormatter = NumberFormat.currency(
@@ -19,12 +27,16 @@ class TransactionHistoryScreen extends StatelessWidget {
     );
 
     return Scaffold(
+      backgroundColor: Colors.blue.shade200, // Latar belakang biru muda
       appBar: AppBar(
         title: const Text('Transaction History'),
-        backgroundColor: Colors.blueAccent,
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        iconTheme: const IconThemeData(color: Colors.white),
+        titleTextStyle: const TextStyle(color: Colors.white, fontSize: 20),
       ),
       body: Padding(
-        padding: const EdgeInsets.all(10.0),
+        padding: const EdgeInsets.all(16.0),
         child: transactions.isEmpty
             ? const Center(
                 child: Text(
@@ -36,17 +48,35 @@ class TransactionHistoryScreen extends StatelessWidget {
                 itemCount: transactions.length,
                 itemBuilder: (context, index) {
                   var transaction = transactions[index];
-                  return Card(
+                  String category = transaction['category']!;
+                  IconData? categoryIcon = categoryIcons[category];
+
+                  return Container(
                     margin: const EdgeInsets.symmetric(vertical: 8),
-                    elevation: 4,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                    decoration: BoxDecoration(
+                      color: Colors.white, // Latar belakang putih pada kartu
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        color: Colors.blue[300]!, // Border biru sesuai theme
+                        width: 2,
+                      ),
                     ),
                     child: ListTile(
-                      leading: const Icon(Icons.category, color: Colors.blueAccent),
-                      title: Text(transaction['category']!),
+                      leading: Icon(
+                        categoryIcon ?? Icons.category, // Menampilkan ikon yang sesuai
+                        color: Colors.blue[300], // Warna ikon biru
+                      ),
+                      title: Text(
+                        category,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black87,
+                        ),
+                      ),
                       subtitle: Text(
-                          '${_rupiahFormatter.format(int.parse(transaction['amount']!))} - ${transaction['date']}'),
+                        '${_rupiahFormatter.format(int.parse(transaction['amount']!))} - ${transaction['date']}',
+                        style: TextStyle(color: Colors.blue[300]), // Warna subtitle biru
+                      ),
                       trailing: IconButton(
                         icon: const Icon(Icons.delete, color: Colors.red),
                         onPressed: () => onDeleteTransaction(index),
