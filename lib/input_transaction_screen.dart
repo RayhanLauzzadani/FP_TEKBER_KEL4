@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class InputTransactionScreen extends StatefulWidget {
-  final void Function(Map<String, String>) onSaveTransaction;
+  final VoidCallback onTransactionAdded; // Callback untuk memperbarui total saldo
 
-  InputTransactionScreen({required this.onSaveTransaction});
+  InputTransactionScreen({required this.onTransactionAdded});
 
   @override
   _InputTransactionScreenState createState() => _InputTransactionScreenState();
@@ -40,20 +41,72 @@ class _InputTransactionScreenState extends State<InputTransactionScreen> {
         : 'Select Date';
   }
 
-  void _saveTransaction() {
+  // Fungsi untuk menyimpan transaksi ke Firestore
+  Future<void> _saveTransaction() async {
     if (_formKey.currentState!.validate() &&
         _selectedDate != null &&
         _selectedCountry != null &&
         _selectedCategory != null) {
-      final transaction = {
-        'country': _selectedCountry!,
-        'category': _selectedCategory!,
-        'amount': _amountController.text,
-        'date': formattedDate,
-        'currency': _selectedCurrencySymbol,
-      };
-      widget.onSaveTransaction(transaction);
-      Navigator.pop(context);
+      try {
+        // Parse jumlah transaksi
+        final int amount = int.parse(_amountController.text);
+
+        // Referensi koleksi Firestore
+        final transactionsCollection = FirebaseFirestore.instance.collection('transactions');
+        final balanceDoc = FirebaseFirestore.instance.collection('balances').doc('totalBalance');
+
+        // Kurangi saldo total di Firestore
+        final balanceSnapshot = await balanceDoc.get();
+        if (balanceSnapshot.exists) {
+          double currentBalance = balanceSnapshot['balance']?.toDouble() ?? 0.0;
+
+          if (currentBalance >= amount) {
+            // Simpan transaksi baru
+            await transactionsCollection.add({
+              'country': _selectedCountry!,
+              'category': _selectedCategory!,
+              'amount': amount,
+              'date': Timestamp.fromDate(_selectedDate!),
+              'currency': _selectedCurrencySymbol,
+            });
+
+            // Kurangi saldo
+            await balanceDoc.update({'balance': FieldValue.increment(-amount)});
+
+            // Panggil callback untuk memperbarui saldo di layar lain
+            widget.onTransactionAdded();
+
+            // Tampilkan dialog berhasil
+            showDialog(
+              context: context,
+              builder: (BuildContext context) {
+                return AlertDialog(
+                  title: const Text('Transaction Successful'),
+                  content: const Text('Your transaction has been added successfully!'),
+                  actions: [
+                    TextButton(
+                      onPressed: () {
+                        Navigator.pop(context); // Tutup dialog
+                        Navigator.pop(context); // Kembali ke layar sebelumnya
+                      },
+                      child: const Text('OK'),
+                    ),
+                  ],
+                );
+              },
+            );
+          } else {
+            throw Exception("Insufficient balance");
+          }
+        } else {
+          throw Exception("Balance document not found");
+        }
+      } catch (e) {
+        print("Error saving transaction: $e");
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to save transaction: $e')),
+        );
+      }
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -62,6 +115,7 @@ class _InputTransactionScreenState extends State<InputTransactionScreen> {
       );
     }
   }
+
 
   Future<void> _pickDate() async {
     final DateTime? picked = await showDatePicker(
@@ -82,7 +136,7 @@ class _InputTransactionScreenState extends State<InputTransactionScreen> {
     setState(() {
       _selectedCountry = country;
       _selectedCurrencySymbol = countryCurrencyList
-              .firstWhere((element) => element['country'] == country)['symbol'] ?? 
+              .firstWhere((element) => element['country'] == country)['symbol'] ??
           '';
     });
   }
