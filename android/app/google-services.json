@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "353816920464",
+    "project_id": "fp-tekber-c-kel4",
+    "storage_bucket": "fp-tekber-c-kel4.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:353816920464:android:1778ff9177a8cd8437b315",
+        "android_client_info": {
+          "package_name": "com.example.ui_sederhana"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCKyCbGnqE_1G1sJ0g1u_8kn5ggo3Fkmmk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
