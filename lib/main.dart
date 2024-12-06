@@ -5,20 +5,13 @@ import 'transaction_history_screen.dart';
 import 'input_transaction_screen.dart';
 import 'stats_screen.dart';
 import 'welcome_page.dart';
+import 'trip_planning_screen.dart';
+import 'conversion_calculator_screen.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   try {
     await Firebase.initializeApp(
-      options: FirebaseOptions(
-        apiKey: "AIzaSyBjMDNMKQFz5Clw8BK343WWe4QwsrTqSs4",
-        authDomain: "fp-tekber-c-kel4.firebaseapp.com",
-        projectId: "fp-tekber-c-kel4",
-        storageBucket: "fp-tekber-c-kel4.appspot.com",
-        messagingSenderId: "353816920464",
-        appId: "1:353816920464:web:a3f3a2924a77c09537b315",
-        measurementId: "G-0WBKLX7PJV",
-      ),
     );
     runApp(MyApp());
   } catch (e) {
@@ -56,14 +49,16 @@ class MyApp extends StatelessWidget {
       initialRoute: '/welcome',
       routes: {
         '/welcome': (context) => WelcomePage(),
-        '/': (context) => DashboardScreen(), // Constructor tanpa parameter
+        '/': (context) => DashboardScreen(),
         '/inputTransactions': (context) => InputTransactionScreen(
-              onTransactionAdded: () {}, // Callback kosong
+              onTransactionAdded: () {},
             ),
         '/history': (context) => TransactionHistoryScreen(
-              onTransactionDeleted: () {}, // Callback kosong
+              onTransactionDeleted: () {},
             ),
         '/expensesStatistics': (context) => StatsScreen(),
+        '/tripPlanning': (context) => TripPlanningScreen(),
+        '/conversionCalculator': (context) => ConversionCalculatorScreen(), // Rute baru
       },
     );
   }

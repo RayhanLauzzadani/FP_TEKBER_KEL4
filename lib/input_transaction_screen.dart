@@ -116,7 +116,6 @@ class _InputTransactionScreenState extends State<InputTransactionScreen> {
     }
   }
 
-
   Future<void> _pickDate() async {
     final DateTime? picked = await showDatePicker(
       context: context,

@@ -110,6 +110,8 @@ class DashboardScreen extends StatelessWidget {
                 _buildMenuButton(context, "Input Transactions", Icons.edit, '/inputTransactions'),
                 _buildMenuButton(context, "History", Icons.history, '/history'),
                 _buildMenuButton(context, "Expenses Statistics", Icons.bar_chart, '/expensesStatistics'),
+                _buildMenuButton(context, "Trip Planning", Icons.map, '/tripPlanning'), // Tombol baru  
+                _buildMenuButton(context, "Conversion Calculator", Icons.calculate, '/conversionCalculator'), // Tombol baru
               ],
             );
           },

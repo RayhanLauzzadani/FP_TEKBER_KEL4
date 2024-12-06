@@ -17,6 +17,7 @@ dependencies:
   country_flags: ^3.0.0
   cloud_firestore: ^5.5.0
   firebase_core: ^3.8.0
+  svg_flag: ^1.5.1
 
 dev_dependencies:
   flutter_test:
