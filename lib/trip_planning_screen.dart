@@ -41,7 +41,10 @@ class _TripPlanningPageState extends State<TripPlanningPage> {
     if (uid == null) {
       throw Exception('User is not logged in');
     }
-    return FirebaseFirestore.instance.collection('users').doc(uid).collection('trips');
+    return FirebaseFirestore.instance
+        .collection('users')
+        .doc(uid)
+        .collection('trips');
   }
 
   Future<void> _addTrip(String location, String date, String budget) async {
@@ -95,259 +98,279 @@ class _TripPlanningPageState extends State<TripPlanningPage> {
   };
 
   void _showAddTripDialog({String? tripId, Map<String, dynamic>? tripData}) {
-  final TextEditingController dateController = TextEditingController();
-  final TextEditingController budgetController = TextEditingController();
+    final TextEditingController dateController = TextEditingController();
+    final TextEditingController budgetController = TextEditingController();
 
-  String selectedCountry = tripData?['location'] ?? '';
-  String currencySymbol = '';
-  String currencyCode = '';
+    String selectedCountry = tripData?['location'] ?? '';
+    String currencySymbol = '';
+    String currencyCode = '';
 
-  // Jika tripData tidak null, isi form dengan data yang ada
-  if (tripData != null) {
-    dateController.text = tripData['date'] ?? '';
-    budgetController.text = tripData['budget']?.replaceAll(RegExp(r'[^\d.]'), '') ?? '';
-    currencyCode = tripData['currency'] ?? '';
-    selectedCountry = tripData['location'] ?? '';
-  }
-
-  void _updateCurrency(String country) {
-    currencyCode = countryToCurrency[country] ?? '';
-    switch (currencyCode) {
-      case 'IDR':
-        currencySymbol = 'Rp';
-        break;
-      case 'USD':
-        currencySymbol = '\$';
-        break;
-      case 'JPY':
-        currencySymbol = '¥';
-        break;
-      case 'GBP':
-        currencySymbol = '£';
-        break;
-      case 'EUR':
-        currencySymbol = '€';
-        break;
-      case 'AUD':
-        currencySymbol = 'A\$';
-        break;
-      case 'SGD':
-        currencySymbol = 'S\$';
-        break;
-      default:
-        currencySymbol = '';
+    // Jika tripData tidak null, isi form dengan data yang ada
+    if (tripData != null) {
+      dateController.text = tripData['date'] ?? '';
+      budgetController.text =
+          tripData['budget']?.replaceAll(RegExp(r'[^\d.]'), '') ?? '';
+      currencyCode = tripData['currency'] ?? '';
+      selectedCountry = tripData['location'] ?? '';
     }
-  }
 
-  if (selectedCountry.isNotEmpty) {
-    _updateCurrency(selectedCountry);
-  }
+    void _updateCurrency(String country) {
+      currencyCode = countryToCurrency[country] ?? '';
+      switch (currencyCode) {
+        case 'IDR':
+          currencySymbol = 'Rp';
+          break;
+        case 'USD':
+          currencySymbol = '\$';
+          break;
+        case 'JPY':
+          currencySymbol = '¥';
+          break;
+        case 'GBP':
+          currencySymbol = '£';
+          break;
+        case 'EUR':
+          currencySymbol = '€';
+          break;
+        case 'AUD':
+          currencySymbol = 'A\$';
+          break;
+        case 'SGD':
+          currencySymbol = 'S\$';
+          break;
+        default:
+          currencySymbol = '';
+      }
+    }
 
-  showDialog(
-    context: context,
-    builder: (context) {
-      return StatefulBuilder(
-        builder: (context, setDialogState) {
-          return AlertDialog(
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-            backgroundColor: const Color(0xFFA1C1DB),
-            content: SingleChildScrollView(
-              child: Form(
-                key: _formKey,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 16),
-                      child: Text(
-                        tripId == null ? 'Add Trip Plan' : 'Edit Trip Plan',
-                        style: const TextStyle(fontSize: 20, color: Colors.black),
+    if (selectedCountry.isNotEmpty) {
+      _updateCurrency(selectedCountry);
+    }
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return AlertDialog(
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(15)),
+              backgroundColor: const Color(0xFFA1C1DB),
+              content: SingleChildScrollView(
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 16),
+                        child: Text(
+                          tripId == null ? 'Add Trip Plan' : 'Edit Trip Plan',
+                          style: const TextStyle(
+                              fontSize: 20, color: Colors.black),
+                        ),
                       ),
-                    ),
-                    const Text(
-                      'Select Location',
-                      style: TextStyle(fontSize: 16, color: Colors.black),
-                    ),
-                    const SizedBox(height: 8),
-                    GestureDetector(
-                      onTap: () {
-                        _showCountrySelectionDialog((String country) {
-                          setDialogState(() {
-                            selectedCountry = country;
-                            _updateCurrency(country);
+                      const Text(
+                        'Select Location',
+                        style: TextStyle(fontSize: 16, color: Colors.black),
+                      ),
+                      const SizedBox(height: 8),
+                      GestureDetector(
+                        onTap: () {
+                          _showCountrySelectionDialog((String country) {
+                            setDialogState(() {
+                              selectedCountry = country;
+                              _updateCurrency(country);
+                            });
                           });
-                        });
-                      },
-                      child: Container(
+                        },
+                        child: Container(
+                          height: 55,
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(8),
+                            color: const Color(0xFFE7F0F8),
+                            border: Border.all(
+                                color: const Color(0xFF4383B7), width: 1.5),
+                          ),
+                          child: Row(
+                            children: [
+                              if (selectedCountry.isNotEmpty)
+                                ClipOval(
+                                  child: Flag.fromString(
+                                    countriesWithFlags.firstWhere((country) =>
+                                        country['name'] ==
+                                        selectedCountry)['code']!,
+                                    height: 24,
+                                    width: 24,
+                                    fit: BoxFit.cover,
+                                  ),
+                                ),
+                              const SizedBox(width: 8),
+                              Text(
+                                selectedCountry.isNotEmpty
+                                    ? selectedCountry
+                                    : 'Select Country',
+                                style: const TextStyle(fontSize: 16),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      const Text(
+                        'Date',
+                        style: TextStyle(fontSize: 16, color: Colors.black),
+                      ),
+                      const SizedBox(height: 8),
+                      GestureDetector(
+                        onTap: () async {
+                          final selectedDate = await showDatePicker(
+                            context: context,
+                            initialDate: DateTime.now(),
+                            firstDate: DateTime(2000),
+                            lastDate: DateTime(2100),
+                          );
+                          if (selectedDate != null) {
+                            setDialogState(() {
+                              dateController.text =
+                                  DateFormat('yyyy-MM-dd').format(selectedDate);
+                            });
+                          }
+                        },
+                        child: Container(
+                          height: 55,
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(8),
+                            color: const Color(0xFFE7F0F8),
+                            border: Border.all(
+                                color: const Color(0xFF4383B7), width: 1.5),
+                          ),
+                          child: Align(
+                            alignment: Alignment.centerLeft,
+                            child: Text(
+                              dateController.text.isNotEmpty
+                                  ? dateController.text
+                                  : 'Select Date',
+                              style: const TextStyle(fontSize: 16),
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      const Text(
+                        'Total Budget',
+                        style: TextStyle(fontSize: 16, color: Colors.black),
+                      ),
+                      const SizedBox(height: 8),
+                      Container(
                         height: 55,
                         padding: const EdgeInsets.symmetric(horizontal: 16),
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(8),
                           color: const Color(0xFFE7F0F8),
-                          border: Border.all(color: const Color(0xFF4383B7), width: 1.5),
+                          border: Border.all(
+                              color: const Color(0xFF4383B7), width: 1.5),
                         ),
                         child: Row(
                           children: [
-                            if (selectedCountry.isNotEmpty)
-                              ClipOval(
-                                child: Flag.fromString(
-                                  countriesWithFlags.firstWhere(
-                                      (country) => country['name'] == selectedCountry)['code']!,
-                                  height: 24,
-                                  width: 24,
-                                  fit: BoxFit.cover,
-                                ),
-                              ),
-                            const SizedBox(width: 8),
                             Text(
-                              selectedCountry.isNotEmpty ? selectedCountry : 'Select Country',
+                              currencySymbol,
                               style: const TextStyle(fontSize: 16),
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: TextFormField(
+                                controller: budgetController,
+                                style: const TextStyle(
+                                    fontSize: 16, fontWeight: FontWeight.w400),
+                                decoration: const InputDecoration(
+                                  border: InputBorder.none,
+                                  hintText: 'Enter Budget',
+                                ),
+                                keyboardType: TextInputType.number,
+                                validator: (value) {
+                                  if (value == null || value.trim().isEmpty) {
+                                    return 'Budget cannot be empty';
+                                  }
+                                  if (double.tryParse(value) == null) {
+                                    return 'Please enter a valid number';
+                                  }
+                                  return null;
+                                },
+                              ),
                             ),
                           ],
                         ),
                       ),
-                    ),
-                    const SizedBox(height: 16),
-                    const Text(
-                      'Date',
-                      style: TextStyle(fontSize: 16, color: Colors.black),
-                    ),
-                    const SizedBox(height: 8),
-                    GestureDetector(
-                      onTap: () async {
-                        final selectedDate = await showDatePicker(
-                          context: context,
-                          initialDate: DateTime.now(),
-                          firstDate: DateTime(2000),
-                          lastDate: DateTime(2100),
-                        );
-                        if (selectedDate != null) {
-                          setDialogState(() {
-                            dateController.text = DateFormat('yyyy-MM-dd').format(selectedDate);
-                          });
-                        }
-                      },
-                      child: Container(
-                        height: 55,
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(8),
-                          color: const Color(0xFFE7F0F8),
-                          border: Border.all(color: const Color(0xFF4383B7), width: 1.5),
-                        ),
-                        child: Align(
-                          alignment: Alignment.centerLeft,
-                          child: Text(
-                            dateController.text.isNotEmpty ? dateController.text : 'Select Date',
-                            style: const TextStyle(fontSize: 16),
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    const Text(
-                      'Total Budget',
-                      style: TextStyle(fontSize: 16, color: Colors.black),
-                    ),
-                    const SizedBox(height: 8),
-                    Container(
-                      height: 55,
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(8),
-                        color: const Color(0xFFE7F0F8),
-                        border: Border.all(color: const Color(0xFF4383B7), width: 1.5),
-                      ),
-                      child: Row(
-                        children: [
-                          Text(
-                            currencySymbol,
-                            style: const TextStyle(fontSize: 16),
-                          ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: TextFormField(
-                              controller: budgetController,
-                              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w400),
-                              decoration: const InputDecoration(
-                                border: InputBorder.none,
-                                hintText: 'Enter Budget',
-                              ),
-                              keyboardType: TextInputType.number,
-                              validator: (value) {
-                                if (value == null || value.trim().isEmpty) {
-                                  return 'Budget cannot be empty';
-                                }
-                                if (double.tryParse(value) == null) {
-                                  return 'Please enter a valid number';
-                                }
-                                return null;
-                              },
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
-            ),
-            actionsAlignment: MainAxisAlignment.center,
-            actions: [
-              TextButton(
-                onPressed: () {
-                  Navigator.of(context).pop();
-                },
-                child: const Text(
-                  'Cancel',
-                  style: TextStyle(fontSize: 16, color: Colors.white),
-                ),
-              ),
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF4383B7),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                  padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 12),
-                ),
-                onPressed: () {
-                  if (_formKey.currentState!.validate() && selectedCountry.isNotEmpty) {
-                    if (tripId == null) {
-                      _addTrip(
-                        selectedCountry,
-                        dateController.text,
-                        '${currencySymbol}${budgetController.text}',
-                      );
-                    } else {
-                      tripsCollection.doc(tripId).update({
-                        'location': selectedCountry,
-                        'date': dateController.text,
-                        'budget': '${currencySymbol}${budgetController.text}',
-                        'currency': currencyCode,
-                      });
-                    }
+              actionsAlignment: MainAxisAlignment.center,
+              actions: [
+                TextButton(
+                  onPressed: () {
                     Navigator.of(context).pop();
-                  }
-                },
-                child: const Text(
-                  'Save',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
+                  },
+                  child: const Text(
+                    'Cancel',
+                    style: TextStyle(fontSize: 16, color: Colors.white),
+                  ),
                 ),
-              ),
-            ],
-          );
-        },
-      );
-    },
-  );
-}
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF4383B7),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10)),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 30, vertical: 12),
+                  ),
+                  onPressed: () {
+                    if (_formKey.currentState!.validate() &&
+                        selectedCountry.isNotEmpty) {
+                      if (tripId == null) {
+                        _addTrip(
+                          selectedCountry,
+                          dateController.text,
+                          '${currencySymbol}${budgetController.text}',
+                        );
+                      } else {
+                        tripsCollection.doc(tripId).update({
+                          'location': selectedCountry,
+                          'date': dateController.text,
+                          'budget': '${currencySymbol}${budgetController.text}',
+                          'currency': currencyCode,
+                        });
+                      }
+                      Navigator.of(context).pop();
+                    }
+                  },
+                  child: const Text(
+                    'Save',
+                    style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white),
+                  ),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
 
   void _showCountrySelectionDialog(Function(String) onSelected) {
     showDialog(
       context: context,
       builder: (context) {
         return AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
           title: const Text('Select Country'),
           content: SizedBox(
             width: double.maxFinite,
@@ -501,17 +524,20 @@ class _TripPlanningPageState extends State<TripPlanningPage> {
                         contentPadding: const EdgeInsets.all(12),
                         title: Text(
                           'Location: ${trip['location'] ?? 'Unknown'}',
-                          style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 16),
+                          style: const TextStyle(
+                              fontWeight: FontWeight.w500, fontSize: 16),
                         ),
                         subtitle: Text(
                           'Date: ${trip['date'] ?? 'N/A'}\nTotal Budget: ${trip['budget'] ?? 'N/A'}',
-                          style: const TextStyle(color: Colors.black87, fontSize: 14),
+                          style: const TextStyle(
+                              color: Colors.black87, fontSize: 14),
                         ),
                         trailing: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             IconButton(
-                              icon: const Icon(Icons.edit, size: 20, color: Color(0xFF4484B7)),
+                              icon: const Icon(Icons.edit,
+                                  size: 20, color: Color(0xFF4484B7)),
                               onPressed: () {
                                 _showAddTripDialog(
                                   tripId: tripId,
@@ -520,7 +546,8 @@ class _TripPlanningPageState extends State<TripPlanningPage> {
                               },
                             ),
                             IconButton(
-                              icon: const Icon(Icons.delete, size: 20, color: Color(0xFF4484B7)),
+                              icon: const Icon(Icons.delete,
+                                  size: 20, color: Color(0xFF4484B7)),
                               onPressed: () {
                                 tripsCollection.doc(tripId).delete();
                               },

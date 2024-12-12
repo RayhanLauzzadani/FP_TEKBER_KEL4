@@ -42,46 +42,47 @@ class _ConversionCalculatorScreenState
   }
 
   Future<void> _fetchExchangeRates() async {
-  final String? apiUrl = dotenv.env['API_URL'];
+    final String? apiUrl = dotenv.env['API_URL'];
 
-  if (apiUrl == null) {
-    setState(() {
-      _errorMessage = 'API URL is not defined in .env file';
-      _isLoading = false;
-    });
-    return;
-  }
-
-  try {
-    final response = await http.get(Uri.parse(apiUrl));
-    if (response.statusCode == 200) {
-      final data = json.decode(response.body) as Map<String, dynamic>;
-      final rates = data['conversion_rates'] as Map<String, dynamic>;
-
-      // Filter hanya untuk 7 negara dan pastikan tipe datanya double
-      final filteredRates = rates.entries
-          .where((entry) => _flagCodes.containsKey(entry.key))
-          .map((entry) => MapEntry(entry.key, (entry.value as num).toDouble()))
-          .toList();
-
+    if (apiUrl == null) {
       setState(() {
-        _exchangeRates = Map<String, double>.fromEntries(filteredRates);
+        _errorMessage = 'API URL is not defined in .env file';
         _isLoading = false;
       });
-    } else {
+      return;
+    }
+
+    try {
+      final response = await http.get(Uri.parse(apiUrl));
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body) as Map<String, dynamic>;
+        final rates = data['conversion_rates'] as Map<String, dynamic>;
+
+        // Filter hanya untuk 7 negara dan pastikan tipe datanya double
+        final filteredRates = rates.entries
+            .where((entry) => _flagCodes.containsKey(entry.key))
+            .map(
+                (entry) => MapEntry(entry.key, (entry.value as num).toDouble()))
+            .toList();
+
+        setState(() {
+          _exchangeRates = Map<String, double>.fromEntries(filteredRates);
+          _isLoading = false;
+        });
+      } else {
+        setState(() {
+          _errorMessage =
+              'Failed to load exchange rates. HTTP ${response.statusCode}';
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
       setState(() {
-        _errorMessage = 'Failed to load exchange rates. HTTP ${response.statusCode}';
+        _errorMessage = 'Error fetching exchange rates: $e';
         _isLoading = false;
       });
     }
-  } catch (e) {
-    setState(() {
-      _errorMessage = 'Error fetching exchange rates: $e';
-      _isLoading = false;
-    });
   }
-}
-
 
   void _convertCurrency() {
     final double input = double.tryParse(_inputController.text) ?? 0;
@@ -217,7 +218,8 @@ class _ConversionCalculatorScreenState
                           padding: const EdgeInsets.all(25.0),
                           child: GridView.builder(
                             physics: const NeverScrollableScrollPhysics(),
-                            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                            gridDelegate:
+                                const SliverGridDelegateWithFixedCrossAxisCount(
                               crossAxisCount: 3,
                               mainAxisSpacing: 8,
                               crossAxisSpacing: 8,
@@ -299,7 +301,8 @@ class _ConversionCalculatorScreenState
               value: currency,
               icon: const Icon(Icons.arrow_drop_down),
               onChanged: onChanged,
-              items: _exchangeRates.keys.map<DropdownMenuItem<String>>((String value) {
+              items: _exchangeRates.keys
+                  .map<DropdownMenuItem<String>>((String value) {
                 return DropdownMenuItem<String>(
                   value: value,
                   child: Row(

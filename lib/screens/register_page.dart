@@ -13,7 +13,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-  final TextEditingController _confirmPasswordController = TextEditingController();
+  final TextEditingController _confirmPasswordController =
+      TextEditingController();
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _phoneController = TextEditingController();
   bool isLoading = false;
@@ -29,13 +30,17 @@ class _RegisterScreenState extends State<RegisterScreen> {
         final password = _passwordController.text.trim();
 
         // Register User
-        final userCredential = await FirebaseAuth.instance.createUserWithEmailAndPassword(
+        final userCredential =
+            await FirebaseAuth.instance.createUserWithEmailAndPassword(
           email: email,
           password: password,
         );
 
         // Save to Firestore
-        await FirebaseFirestore.instance.collection('users').doc(userCredential.user!.uid).set({
+        await FirebaseFirestore.instance
+            .collection('users')
+            .doc(userCredential.user!.uid)
+            .set({
           'balance': 0,
           'email': email,
           'username': _usernameController.text.trim(),
@@ -44,7 +49,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
         // Success
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Registration successful! Please login.')),
+          const SnackBar(
+              content: Text('Registration successful! Please login.')),
         );
 
         Navigator.pushReplacementNamed(context, '/login');
@@ -108,7 +114,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       topRight: Radius.circular(30),
                     ),
                   ),
-                  padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 40),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 40, vertical: 40),
                   child: Form(
                     key: _formKey,
                     child: Column(
@@ -139,7 +146,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             if (value == null || value.isEmpty) {
                               return 'Email cannot be empty';
                             }
-                            if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(value)) {
+                            if (!RegExp(r'^[^@]+@[^@]+\.[^@]+')
+                                .hasMatch(value)) {
                               return 'Enter a valid email';
                             }
                             return null;
@@ -276,14 +284,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         ElevatedButton(
                           onPressed: isLoading ? null : _register,
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color.fromARGB(255, 0, 55, 101),
+                            backgroundColor:
+                                const Color.fromARGB(255, 0, 55, 101),
                             padding: const EdgeInsets.symmetric(vertical: 16),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12),
                             ),
                           ),
                           child: isLoading
-                              ? const CircularProgressIndicator(color: Colors.white)
+                              ? const CircularProgressIndicator(
+                                  color: Colors.white)
                               : const Text(
                                   'Register',
                                   style: TextStyle(
@@ -305,7 +315,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                 style: TextStyle(color: Colors.white),
                               ),
                               GestureDetector(
-                                onTap: () => Navigator.pushNamed(context, '/login'),
+                                onTap: () =>
+                                    Navigator.pushNamed(context, '/login'),
                                 child: const Text(
                                   'Login',
                                   style: TextStyle(

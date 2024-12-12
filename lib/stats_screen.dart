@@ -50,7 +50,8 @@ class _StatsScreenState extends State<StatsScreen> {
       final category = data['category'] ?? 'Unknown';
       final double amount = (data['amount'] as num?)?.toDouble() ?? 0.0;
       final String currency = data['currency'] ?? 'USD';
-      final double convertedAmount = (data['convertedAmount'] as num?)?.toDouble() ?? 0.0;
+      final double convertedAmount =
+          (data['convertedAmount'] as num?)?.toDouble() ?? 0.0;
 
       // Gunakan convertedAmount jika tersedia, jika tidak lakukan konversi
       final double amountInUSD = convertedAmount > 0
@@ -218,7 +219,8 @@ class _StatsScreenState extends State<StatsScreen> {
                                     width: 10,
                                     height: 10,
                                     decoration: BoxDecoration(
-                                      color: colorList[index % colorList.length],
+                                      color:
+                                          colorList[index % colorList.length],
                                       shape: BoxShape.circle,
                                     ),
                                   ),

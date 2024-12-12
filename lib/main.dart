@@ -10,8 +10,6 @@ import 'input_transaction_screen.dart';
 import 'stats_screen.dart';
 import 'trip_planning_screen.dart';
 import 'conversion_calculator_screen.dart';
-import 'screens/verify_screen.dart';
-import 'screens/newpassword_screen.dart';
 import 'screens/register_page.dart';
 import 'screens/logout_page.dart'; // Import LogoutPage
 import 'package:phosphor_flutter/phosphor_flutter.dart';
@@ -60,17 +58,16 @@ class MyApp extends StatelessWidget {
         '/welcome': (context) => WelcomePage(),
         '/login': (context) => const LoginScreen(),
         '/register': (context) => RegisterScreen(),
-        '/verify': (context) => VerifyEmailScreen(),
-        '/newPassword': (context) => NewPasswordScreen(),
-        '/dashboard': (context) => NavigationHome(),
         '/inputTransactions': (context) {
-          final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>;
+          final args = ModalRoute.of(context)?.settings.arguments
+              as Map<String, dynamic>;
           return InputTransactionScreen(
             onTransactionAdded: () {},
             exchangeRates: args['exchangeRates'] ?? {},
           );
         },
-        '/history': (context) => TransactionHistoryScreen(onTransactionDeleted: () {}),
+        '/history': (context) =>
+            TransactionHistoryScreen(onTransactionDeleted: () {}),
         '/expensesStatistics': (context) => StatsScreen(),
         '/tripPlanning': (context) => TripPlanningScreen(),
         '/conversionCalculator': (context) => ConversionCalculatorScreen(),
@@ -86,7 +83,8 @@ class AuthWrapper extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return StreamBuilder<User?>(
-      stream: FirebaseAuth.instance.authStateChanges(), // Stream status autentikasi Firebase
+      stream: FirebaseAuth.instance
+          .authStateChanges(), // Stream status autentikasi Firebase
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           // Tampilkan layar loading saat memeriksa status login
