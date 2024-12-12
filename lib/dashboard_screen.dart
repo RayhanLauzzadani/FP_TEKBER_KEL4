@@ -212,72 +212,72 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Widget _buildNavbarWelcome() {
-  final String? uid = FirebaseAuth.instance.currentUser?.uid;
+    final String? uid = FirebaseAuth.instance.currentUser?.uid;
 
-  if (uid == null) {
-    return const Text(
-      "Welcome, Guest",
-      style: TextStyle(fontSize: 16, color: Colors.white),
+    if (uid == null) {
+      return const Text(
+        "Welcome, Guest",
+        style: TextStyle(fontSize: 16, color: Colors.white),
+      );
+    }
+
+    return StreamBuilder<DocumentSnapshot>(
+      stream:
+          FirebaseFirestore.instance.collection('users').doc(uid).snapshots(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const CircularProgressIndicator();
+        }
+
+        if (!snapshot.hasData || !snapshot.data!.exists) {
+          return const Text(
+            "Welcome, User",
+            style: TextStyle(fontSize: 16, color: Colors.white),
+          );
+        }
+
+        // Ambil data nama pengguna
+        final String username = snapshot.data!['username'] ?? 'User';
+
+        return Transform.translate(
+          offset: const Offset(0, -20),
+          child: Padding(
+            padding: const EdgeInsets.only(left: 20.0, right: 20.0),
+            child: Row(
+              children: [
+                Icon(
+                  PhosphorIcons.userCircle(),
+                  size: 40.0,
+                  color: Colors.white,
+                ),
+                const SizedBox(width: 10),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      "Welcome",
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Color(0xFFFFFFFF),
+                      ),
+                    ),
+                    Text(
+                      username, // Nama dinamis dari Firestore
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFFFFFFFF),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
-
-  return StreamBuilder<DocumentSnapshot>(
-    stream: FirebaseFirestore.instance.collection('users').doc(uid).snapshots(),
-    builder: (context, snapshot) {
-      if (snapshot.connectionState == ConnectionState.waiting) {
-        return const CircularProgressIndicator();
-      }
-
-      if (!snapshot.hasData || !snapshot.data!.exists) {
-        return const Text(
-          "Welcome, User",
-          style: TextStyle(fontSize: 16, color: Colors.white),
-        );
-      }
-
-      // Ambil data nama pengguna
-      final String username = snapshot.data!['username'] ?? 'User';
-
-      return Transform.translate(
-        offset: const Offset(0, -20),
-        child: Padding(
-          padding: const EdgeInsets.only(left: 20.0, right: 20.0),
-          child: Row(
-            children: [
-              Icon(
-                PhosphorIcons.userCircle(),
-                size: 40.0,
-                color: Colors.white,
-              ),
-              const SizedBox(width: 10),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    "Welcome",
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Color(0xFFFFFFFF),
-                    ),
-                  ),
-                  Text(
-                    username, // Nama dinamis dari Firestore
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: Color(0xFFFFFFFF),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-      );
-    },
-  );
-}
-
 
   Widget _buildBalanceSection(double totalBalance) {
     return Transform.translate(
