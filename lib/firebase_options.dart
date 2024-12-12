@@ -71,4 +71,5 @@ class DefaultFirebaseOptions {
     storageBucket: 'fp-tekber-c-kel4.firebasestorage.app',
     iosBundleId: 'com.example.uiSederhana',
   );
+
 }
