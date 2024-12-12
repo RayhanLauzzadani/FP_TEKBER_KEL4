@@ -2,7 +2,7 @@
     package="com.example.ui_sederhana">
 
     <application
-        android:label="ui_sederhana"
+        android:label="DooIT"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity

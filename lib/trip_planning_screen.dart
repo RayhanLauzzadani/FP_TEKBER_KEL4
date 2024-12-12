@@ -1,330 +1,541 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flag/flag.dart';
 import 'package:intl/intl.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
-class TripPlanningScreen extends StatefulWidget {
-  @override
-  _TripPlanningScreenState createState() => _TripPlanningScreenState();
-}
-
-class _TripPlanningScreenState extends State<TripPlanningScreen> {
-  final TextEditingController _destinationController = TextEditingController();
-  final TextEditingController _budgetController = TextEditingController();
-  DateTime? _selectedDate;
-  final _currencyFormatter =
-      NumberFormat.currency(locale: 'id_ID', symbol: 'Rp ', decimalDigits: 0);
+class TripPlanningScreen extends StatelessWidget {
+  const TripPlanningScreen({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.blue[100],
-      appBar: AppBar(
-        title: const Align(
-          alignment: Alignment.centerLeft,
-          child: Text(
-            "Trip Planning",
-            style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
-          ),
-        ),
-        backgroundColor: Colors.blue[300],
-        elevation: 0,
-        iconTheme: const IconThemeData(color: Colors.white),
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            // Input Form
-            Container(
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black12,
-                    blurRadius: 4,
-                    offset: Offset(0, 2),
-                  ),
-                ],
-              ),
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildInputField("Destination", _destinationController),
-                  const SizedBox(height: 10),
-                  _buildDatePicker(context),
-                  const SizedBox(height: 10),
-                  _buildInputField("Budget", _budgetController, isCurrency: true),
-                  const SizedBox(height: 20),
-                  Center(
-                    child: _buildButton(
-                      "Save Trip",
-                      onPressed: _saveTrip,
-                      backgroundColor: Colors.blue[300]!,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 20),
-            // Trips List
-            Expanded(
-              child: StreamBuilder<QuerySnapshot>(
-                stream: FirebaseFirestore.instance.collection('trips').snapshots(),
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return const Center(child: CircularProgressIndicator());
-                  }
-                  if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-                    return const Center(child: Text("No trips found."));
-                  }
-                  final trips = snapshot.data!.docs;
-                  return ListView.builder(
-                    itemCount: trips.length,
-                    itemBuilder: (context, index) {
-                      final trip = trips[index];
-                      return _buildTripCard(trip);
-                    },
-                  );
-                },
-              ),
-            ),
-          ],
-        ),
-      ),
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      home: TripPlanningPage(),
     );
   }
+}
 
-  // Input Field Widget
-  Widget _buildInputField(String label, TextEditingController controller,
-      {bool isCurrency = false}) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        SizedBox(
-          width: 100,
-          child: Text(
-            "$label :",
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              color: Colors.blue[300],
-            ),
-          ),
-        ),
-        Expanded(
-          child: Container(
-            height: 48,
-            alignment: Alignment.center,
-            child: TextField(
-              controller: controller,
-              keyboardType:
-                  isCurrency ? TextInputType.number : TextInputType.text,
-              style: TextStyle(color: Colors.blue[300]),
-              decoration: InputDecoration(
-                fillColor: Colors.white,
-                filled: true,
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  borderSide: BorderSide(color: Colors.blue[300]!),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  borderSide: BorderSide(color: Colors.blue[300]!, width: 2),
-                ),
-                contentPadding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                hintStyle: TextStyle(color: Colors.blue[300]!.withOpacity(0.7)),
-              ),
-            ),
-          ),
-        ),
-      ],
-    );
+class TripPlanningPage extends StatefulWidget {
+  @override
+  _TripPlanningPageState createState() => _TripPlanningPageState();
+}
+
+class _TripPlanningPageState extends State<TripPlanningPage> {
+  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+  String? uid;
+
+  @override
+  void initState() {
+    super.initState();
+    uid = FirebaseAuth.instance.currentUser?.uid;
+
+    if (uid == null) {
+      debugPrint("Error: User is not logged in!");
+    } else {
+      debugPrint("Logged in user UID: $uid");
+    }
   }
 
-  // Date Picker Widget
-  Widget _buildDatePicker(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        SizedBox(
-          width: 100,
-          child: Text(
-            "Date :",
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              color: Colors.blue[300],
-            ),
-          ),
-        ),
-        Expanded(
-          child: GestureDetector(
-            onTap: () async {
-              final pickedDate = await showDatePicker(
-                context: context,
-                initialDate: _selectedDate ?? DateTime.now(),
-                firstDate: DateTime.now(),
-                lastDate: DateTime(2100),
-              );
-              if (pickedDate != null) {
-                setState(() {
-                  _selectedDate = pickedDate;
-                });
-              }
-            },
-            child: Container(
-              height: 48,
-              alignment: Alignment.centerLeft,
-              padding: const EdgeInsets.symmetric(horizontal: 12),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                border: Border.all(color: Colors.blue[300]!),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Text(
-                _selectedDate != null
-                    ? DateFormat("dd-MM-yyyy").format(_selectedDate!)
-                    : "Select a date",
-                style: TextStyle(color: Colors.blue[300]),
-              ),
-            ),
-          ),
-        ),
-      ],
-    );
+  CollectionReference<Map<String, dynamic>> get tripsCollection {
+    if (uid == null) {
+      throw Exception('User is not logged in');
+    }
+    return FirebaseFirestore.instance.collection('users').doc(uid).collection('trips');
   }
 
-  // Button Widget
-  Widget _buildButton(String label,
-      {required VoidCallback onPressed, required Color backgroundColor}) {
-    return ElevatedButton(
-      onPressed: onPressed,
-      style: ElevatedButton.styleFrom(
-        backgroundColor: backgroundColor,
-        foregroundColor: Colors.white,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
-        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 30),
-      ),
-      child: Text(label, style: const TextStyle(fontWeight: FontWeight.bold)),
-    );
-  }
-
-  // Trip Card Widget
-  Widget _buildTripCard(QueryDocumentSnapshot trip) {
-    return Card(
-      margin: const EdgeInsets.symmetric(vertical: 8),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: ListTile(
-        title: Text(
-          trip['destination'],
-          style: const TextStyle(fontWeight: FontWeight.bold),
-        ),
-        subtitle: Text(DateFormat("dd-MM-yyyy").format(trip['date'].toDate())),
-        trailing: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(_currencyFormatter.format(trip['budget'])),
-            const SizedBox(width: 8),
-            IconButton(
-              icon: Icon(Icons.delete, color: Colors.red),
-              onPressed: () => _deleteTrip(trip.id),
-            ),
-          ],
-        ),
-        onTap: () {
-          _showEditTripDialog(trip);
-        },
-      ),
-    );
-  }
-
-  // Save Trip to Firebase
-  void _saveTrip() async {
-    if (_destinationController.text.isEmpty ||
-        _selectedDate == null ||
-        _budgetController.text.isEmpty) {
+  Future<void> _addTrip(String location, String date, String budget) async {
+    if (uid == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Please fill all the fields"),
-        ),
+        const SnackBar(content: Text('User not logged in!')),
       );
+      debugPrint("User not logged in. Cannot add trip.");
       return;
     }
 
-    await FirebaseFirestore.instance.collection('trips').add({
-      'destination': _destinationController.text,
-      'date': _selectedDate,
-      'budget': double.parse(_budgetController.text),
-    });
+    try {
+      await tripsCollection.add({
+        'location': location,
+        'date': date,
+        'budget': budget,
+        'currency': countryToCurrency[location] ?? 'USD',
+        'createdAt': FieldValue.serverTimestamp(),
+      });
 
-    _clearForm();
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Trip added successfully!')),
+      );
+      debugPrint("Trip added successfully for user UID: $uid");
+    } catch (e) {
+      debugPrint("Error adding trip: $e");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error adding trip: $e')),
+      );
+    }
   }
 
-  // Delete Trip from Firebase
-  void _deleteTrip(String tripId) async {
-    await FirebaseFirestore.instance.collection('trips').doc(tripId).delete();
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text("Trip deleted successfully"),
-      ),
-    );
+  final List<Map<String, String>> countriesWithFlags = [
+    {"name": "Indonesia", "code": "ID"},
+    {"name": "United States", "code": "US"},
+    {"name": "Japan", "code": "JP"},
+    {"name": "United Kingdom", "code": "GB"},
+    {"name": "European Union", "code": "EU"},
+    {"name": "Australia", "code": "AU"},
+    {"name": "Singapore", "code": "SG"},
+  ];
+
+  final Map<String, String> countryToCurrency = {
+    'Indonesia': 'IDR',
+    'United States': 'USD',
+    'Japan': 'JPY',
+    'United Kingdom': 'GBP',
+    'European Union': 'EUR',
+    'Australia': 'AUD',
+    'Singapore': 'SGD',
+  };
+
+  void _showAddTripDialog({String? tripId, Map<String, dynamic>? tripData}) {
+  final TextEditingController dateController = TextEditingController();
+  final TextEditingController budgetController = TextEditingController();
+
+  String selectedCountry = tripData?['location'] ?? '';
+  String currencySymbol = '';
+  String currencyCode = '';
+
+  // Jika tripData tidak null, isi form dengan data yang ada
+  if (tripData != null) {
+    dateController.text = tripData['date'] ?? '';
+    budgetController.text = tripData['budget']?.replaceAll(RegExp(r'[^\d.]'), '') ?? '';
+    currencyCode = tripData['currency'] ?? '';
+    selectedCountry = tripData['location'] ?? '';
   }
 
-  // Show Edit Trip Dialog
-  void _showEditTripDialog(QueryDocumentSnapshot trip) {
-    _destinationController.text = trip['destination'];
-    _selectedDate = trip['date'].toDate();
-    _budgetController.text = trip['budget'].toString();
+  void _updateCurrency(String country) {
+    currencyCode = countryToCurrency[country] ?? '';
+    switch (currencyCode) {
+      case 'IDR':
+        currencySymbol = 'Rp';
+        break;
+      case 'USD':
+        currencySymbol = '\$';
+        break;
+      case 'JPY':
+        currencySymbol = '¥';
+        break;
+      case 'GBP':
+        currencySymbol = '£';
+        break;
+      case 'EUR':
+        currencySymbol = '€';
+        break;
+      case 'AUD':
+        currencySymbol = 'A\$';
+        break;
+      case 'SGD':
+        currencySymbol = 'S\$';
+        break;
+      default:
+        currencySymbol = '';
+    }
+  }
 
+  if (selectedCountry.isNotEmpty) {
+    _updateCurrency(selectedCountry);
+  }
+
+  showDialog(
+    context: context,
+    builder: (context) {
+      return StatefulBuilder(
+        builder: (context, setDialogState) {
+          return AlertDialog(
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+            backgroundColor: const Color(0xFFA1C1DB),
+            content: SingleChildScrollView(
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 16),
+                      child: Text(
+                        tripId == null ? 'Add Trip Plan' : 'Edit Trip Plan',
+                        style: const TextStyle(fontSize: 20, color: Colors.black),
+                      ),
+                    ),
+                    const Text(
+                      'Select Location',
+                      style: TextStyle(fontSize: 16, color: Colors.black),
+                    ),
+                    const SizedBox(height: 8),
+                    GestureDetector(
+                      onTap: () {
+                        _showCountrySelectionDialog((String country) {
+                          setDialogState(() {
+                            selectedCountry = country;
+                            _updateCurrency(country);
+                          });
+                        });
+                      },
+                      child: Container(
+                        height: 55,
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(8),
+                          color: const Color(0xFFE7F0F8),
+                          border: Border.all(color: const Color(0xFF4383B7), width: 1.5),
+                        ),
+                        child: Row(
+                          children: [
+                            if (selectedCountry.isNotEmpty)
+                              ClipOval(
+                                child: Flag.fromString(
+                                  countriesWithFlags.firstWhere(
+                                      (country) => country['name'] == selectedCountry)['code']!,
+                                  height: 24,
+                                  width: 24,
+                                  fit: BoxFit.cover,
+                                ),
+                              ),
+                            const SizedBox(width: 8),
+                            Text(
+                              selectedCountry.isNotEmpty ? selectedCountry : 'Select Country',
+                              style: const TextStyle(fontSize: 16),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    const Text(
+                      'Date',
+                      style: TextStyle(fontSize: 16, color: Colors.black),
+                    ),
+                    const SizedBox(height: 8),
+                    GestureDetector(
+                      onTap: () async {
+                        final selectedDate = await showDatePicker(
+                          context: context,
+                          initialDate: DateTime.now(),
+                          firstDate: DateTime(2000),
+                          lastDate: DateTime(2100),
+                        );
+                        if (selectedDate != null) {
+                          setDialogState(() {
+                            dateController.text = DateFormat('yyyy-MM-dd').format(selectedDate);
+                          });
+                        }
+                      },
+                      child: Container(
+                        height: 55,
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(8),
+                          color: const Color(0xFFE7F0F8),
+                          border: Border.all(color: const Color(0xFF4383B7), width: 1.5),
+                        ),
+                        child: Align(
+                          alignment: Alignment.centerLeft,
+                          child: Text(
+                            dateController.text.isNotEmpty ? dateController.text : 'Select Date',
+                            style: const TextStyle(fontSize: 16),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    const Text(
+                      'Total Budget',
+                      style: TextStyle(fontSize: 16, color: Colors.black),
+                    ),
+                    const SizedBox(height: 8),
+                    Container(
+                      height: 55,
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(8),
+                        color: const Color(0xFFE7F0F8),
+                        border: Border.all(color: const Color(0xFF4383B7), width: 1.5),
+                      ),
+                      child: Row(
+                        children: [
+                          Text(
+                            currencySymbol,
+                            style: const TextStyle(fontSize: 16),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: TextFormField(
+                              controller: budgetController,
+                              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w400),
+                              decoration: const InputDecoration(
+                                border: InputBorder.none,
+                                hintText: 'Enter Budget',
+                              ),
+                              keyboardType: TextInputType.number,
+                              validator: (value) {
+                                if (value == null || value.trim().isEmpty) {
+                                  return 'Budget cannot be empty';
+                                }
+                                if (double.tryParse(value) == null) {
+                                  return 'Please enter a valid number';
+                                }
+                                return null;
+                              },
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            actionsAlignment: MainAxisAlignment.center,
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+                child: const Text(
+                  'Cancel',
+                  style: TextStyle(fontSize: 16, color: Colors.white),
+                ),
+              ),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF4383B7),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 12),
+                ),
+                onPressed: () {
+                  if (_formKey.currentState!.validate() && selectedCountry.isNotEmpty) {
+                    if (tripId == null) {
+                      _addTrip(
+                        selectedCountry,
+                        dateController.text,
+                        '${currencySymbol}${budgetController.text}',
+                      );
+                    } else {
+                      tripsCollection.doc(tripId).update({
+                        'location': selectedCountry,
+                        'date': dateController.text,
+                        'budget': '${currencySymbol}${budgetController.text}',
+                        'currency': currencyCode,
+                      });
+                    }
+                    Navigator.of(context).pop();
+                  }
+                },
+                child: const Text(
+                  'Save',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
+                ),
+              ),
+            ],
+          );
+        },
+      );
+    },
+  );
+}
+
+  void _showCountrySelectionDialog(Function(String) onSelected) {
     showDialog(
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: const Text("Edit Trip"),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              _buildInputField("Destination", _destinationController),
-              const SizedBox(height: 10),
-              _buildDatePicker(context),
-              const SizedBox(height: 10),
-              _buildInputField("Budget", _budgetController, isCurrency: true),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text("Cancel"),
-            ),
-            TextButton(
-              onPressed: () async {
-                await FirebaseFirestore.instance
-                    .collection('trips')
-                    .doc(trip.id)
-                    .update({
-                  'destination': _destinationController.text,
-                  'date': _selectedDate,
-                  'budget': double.parse(_budgetController.text),
-                });
-                Navigator.pop(context);
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+          title: const Text('Select Country'),
+          content: SizedBox(
+            width: double.maxFinite,
+            child: ListView.builder(
+              shrinkWrap: true,
+              itemCount: countriesWithFlags.length,
+              itemBuilder: (context, index) {
+                final country = countriesWithFlags[index];
+                return ListTile(
+                  leading: ClipOval(
+                    child: Flag.fromString(
+                      country['code']!,
+                      height: 24,
+                      width: 24,
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                  title: Text(country['name']!),
+                  onTap: () {
+                    onSelected(country['name']!);
+                    Navigator.pop(context);
+                  },
+                );
               },
-              child: const Text("Save"),
             ),
-          ],
+          ),
         );
       },
     );
   }
 
-  // Clear Form
-  void _clearForm() {
-    _destinationController.clear();
-    _budgetController.clear();
-    _selectedDate = null;
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      extendBodyBehindAppBar: true,
+      appBar: AppBar(
+        title: const Text(
+          'Trip Planning',
+          style: TextStyle(
+            fontSize: 20,
+            color: Color(0xFFFFFFFF),
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        centerTitle: false,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Color(0xFFFFFFFF)),
+          onPressed: () {
+            Navigator.pop(context);
+          },
+        ),
+      ),
+      body: Stack(
+        children: [
+          Container(
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  Color(0xFF4484B7),
+                  Color(0xFFFFFFFF),
+                ],
+                stops: [0.54, 1.0],
+              ),
+            ),
+          ),
+          Positioned(
+            top: kToolbarHeight + 50,
+            left: MediaQuery.of(context).size.width / 2 - 75,
+            child: FloatingActionButton.extended(
+              onPressed: () {
+                _showAddTripDialog();
+              },
+              backgroundColor: const Color.fromRGBO(255, 255, 255, 0.5),
+              label: const Text(
+                'Add Trip Plan',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                  color: Colors.black,
+                ),
+              ),
+            ),
+          ),
+          Positioned.fill(
+            top: kToolbarHeight + 130 + 30,
+            child: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+              stream: uid != null
+                  ? FirebaseFirestore.instance
+                      .collection('users')
+                      .doc(uid)
+                      .collection('trips')
+                      .orderBy('createdAt', descending: true)
+                      .snapshots()
+                  : null,
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  debugPrint("Loading data...");
+                  return const Center(child: CircularProgressIndicator());
+                }
+
+                if (snapshot.hasError) {
+                  debugPrint("Error while fetching data: ${snapshot.error}");
+                  return const Center(
+                    child: Text(
+                      'Error loading trips.',
+                      style: TextStyle(fontSize: 18, color: Colors.red),
+                    ),
+                  );
+                }
+
+                if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                  debugPrint("No data found in Firestore for user: $uid");
+                  return const Center(
+                    child: Text(
+                      'No trips found.',
+                      style: TextStyle(fontSize: 18, color: Colors.black87),
+                    ),
+                  );
+                }
+
+                final trips = snapshot.data!.docs;
+                debugPrint("Number of trips found: ${trips.length}");
+
+                return ListView.builder(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  itemCount: trips.length,
+                  itemBuilder: (context, index) {
+                    final trip = trips[index].data();
+                    final tripId = trips[index].id;
+
+                    debugPrint("Trip $index data: $trip");
+
+                    return Container(
+                      margin: const EdgeInsets.only(bottom: 20),
+                      decoration: BoxDecoration(
+                        color: const Color.fromRGBO(255, 255, 255, 0.5),
+                        borderRadius: BorderRadius.circular(10),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.1),
+                            blurRadius: 5,
+                            offset: const Offset(0, 3),
+                          ),
+                        ],
+                      ),
+                      child: ListTile(
+                        contentPadding: const EdgeInsets.all(12),
+                        title: Text(
+                          'Location: ${trip['location'] ?? 'Unknown'}',
+                          style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 16),
+                        ),
+                        subtitle: Text(
+                          'Date: ${trip['date'] ?? 'N/A'}\nTotal Budget: ${trip['budget'] ?? 'N/A'}',
+                          style: const TextStyle(color: Colors.black87, fontSize: 14),
+                        ),
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            IconButton(
+                              icon: const Icon(Icons.edit, size: 20, color: Color(0xFF4484B7)),
+                              onPressed: () {
+                                _showAddTripDialog(
+                                  tripId: tripId,
+                                  tripData: trip,
+                                );
+                              },
+                            ),
+                            IconButton(
+                              icon: const Icon(Icons.delete, size: 20, color: Color(0xFF4484B7)),
+                              onPressed: () {
+                                tripsCollection.doc(tripId).delete();
+                              },
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }

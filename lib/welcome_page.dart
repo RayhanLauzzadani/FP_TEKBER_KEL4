@@ -12,7 +12,7 @@ class _WelcomePageState extends State<WelcomePage> {
 
     // Timer untuk berpindah ke Dashboard setelah 3 detik
     Future.delayed(const Duration(seconds: 3), () {
-      Navigator.pushReplacementNamed(context, '/');
+      Navigator.pushReplacementNamed(context, '/login');
     });
   }
 
@@ -23,7 +23,7 @@ class _WelcomePageState extends State<WelcomePage> {
       body: Center(
         child: Image.asset(
           'assets/images/logo.png', // Path ke logo
-          width: 800, // Ukuran logo diperbesar
+          width: 800, // Ukuran logo dikembalikan seperti semula
           height: 800,
         ),
       ),
