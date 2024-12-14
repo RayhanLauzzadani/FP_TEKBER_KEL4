@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'screens/login_page.dart';
 import 'welcome_page.dart';
 import 'dashboard_screen.dart';
@@ -13,12 +14,33 @@ import 'conversion_calculator_screen.dart';
 import 'screens/register_page.dart';
 import 'screens/logout_page.dart'; // Import LogoutPage
 import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:flutter/foundation.dart' show defaultTargetPlatform, TargetPlatform;
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   try {
     await dotenv.load(fileName: ".env");
-    await Firebase.initializeApp();
+
+    // Konfigurasi Firebase untuk Web
+    if (defaultTargetPlatform == TargetPlatform.iOS ||
+        defaultTargetPlatform == TargetPlatform.android) {
+      // Firebase untuk Android/iOS menggunakan konfigurasi bawaan
+      await Firebase.initializeApp();
+    } else {
+      // Firebase untuk Web
+      await Firebase.initializeApp(
+        options: const FirebaseOptions(
+          apiKey: "AIzaSyBjMDNMKQFz5Clw8BK343WWe4QwsrTqSs4",
+          authDomain: "fp-tekber-c-kel4.firebaseapp.com",
+          projectId: "fp-tekber-c-kel4",
+          storageBucket: "fp-tekber-c-kel4.firebasestorage.app",
+          messagingSenderId: "353816920464",
+          appId: "1:353816920464:web:a3f3a2924a77c09537b315",
+          measurementId: "G-0WBKLX7PJV",
+        ),
+      );
+    }
+
     runApp(MyApp());
   } catch (e) {
     runApp(ErrorApp(message: e.toString()));
@@ -53,16 +75,17 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'Navigation Demo',
       theme: ThemeData(primarySwatch: Colors.blue),
-      home: const AuthWrapper(), // Ganti initialRoute dengan AuthWrapper
+      home: const AuthWrapper(), // AuthWrapper untuk memeriksa status login
       routes: {
         '/welcome': (context) => WelcomePage(),
         '/login': (context) => const LoginScreen(),
         '/register': (context) => RegisterScreen(),
+        '/dashboard': (context) => NavigationHome(), // Mengarahkan ke NavigationHome
         '/inputTransactions': (context) {
           final args = ModalRoute.of(context)?.settings.arguments
               as Map<String, dynamic>;
           return InputTransactionScreen(
-            onTransactionAdded: () {},
+            onTransactionAdded: () {}, // Aksi tambahan jika diperlukan
             exchangeRates: args['exchangeRates'] ?? {},
           );
         },
@@ -72,6 +95,18 @@ class MyApp extends StatelessWidget {
         '/tripPlanning': (context) => TripPlanningScreen(),
         '/conversionCalculator': (context) => ConversionCalculatorScreen(),
         '/logout': (context) => const LogoutScreen(), // Route untuk LogoutPage
+      },
+      onUnknownRoute: (settings) {
+        return MaterialPageRoute(
+          builder: (context) => Scaffold(
+            body: Center(
+              child: Text(
+                'Rute tidak ditemukan: ${settings.name}',
+                style: const TextStyle(color: Colors.red, fontSize: 18),
+              ),
+            ),
+          ),
+        );
       },
     );
   }
@@ -83,24 +118,36 @@ class AuthWrapper extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return StreamBuilder<User?>(
-      stream: FirebaseAuth.instance
-          .authStateChanges(), // Stream status autentikasi Firebase
+      stream: FirebaseAuth.instance.authStateChanges(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          // Tampilkan layar loading saat memeriksa status login
           return const Scaffold(
-            body: Center(
-              child: CircularProgressIndicator(),
-            ),
+            body: Center(child: CircularProgressIndicator()),
           );
         }
 
         if (snapshot.hasData) {
-          // Jika pengguna sudah login, arahkan ke Dashboard
-          return NavigationHome();
+          return FutureBuilder<DocumentSnapshot>(
+            future: FirebaseFirestore.instance
+                .collection('users')
+                .doc(FirebaseAuth.instance.currentUser!.uid)
+                .get(),
+            builder: (context, userSnapshot) {
+              if (userSnapshot.connectionState == ConnectionState.waiting) {
+                return const Scaffold(
+                  body: Center(child: CircularProgressIndicator()),
+                );
+              }
+              if (!userSnapshot.hasData ||
+                  userSnapshot.data == null ||
+                  !(userSnapshot.data as DocumentSnapshot).exists) {
+                return WelcomePage(); // Jika data pengguna tidak ditemukan
+              }
+              return NavigationHome(); // Data valid, arahkan ke dashboard
+            },
+          );
         } else {
-          // Jika belum login, arahkan ke halaman WelcomePage atau LoginPage
-          return WelcomePage();
+          return WelcomePage(); // Belum login, arahkan ke WelcomePage
         }
       },
     );
@@ -148,7 +195,7 @@ class _NavigationHomeState extends State<NavigationHome> {
           type: BottomNavigationBarType.fixed,
           backgroundColor: Colors.transparent,
           elevation: 0,
-          selectedItemColor: Color(0xFF7AAACE),
+          selectedItemColor: const Color(0xFF7AAACE),
           unselectedItemColor: Colors.grey,
           selectedLabelStyle: const TextStyle(fontWeight: FontWeight.bold),
           unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.normal),
