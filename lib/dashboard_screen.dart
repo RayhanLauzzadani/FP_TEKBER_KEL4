@@ -81,66 +81,55 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Future<void> fetchTotalBalance() async {
-    final uid = FirebaseAuth.instance.currentUser?.uid;
+    try {
+      final uid = FirebaseAuth.instance.currentUser?.uid;
+      if (uid == null) return;
 
-    if (uid == null) {
-      print('User not logged in');
-      return;
-    }
+      final docSnapshot = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(uid)
+          .get();
 
-    final docRef = FirebaseFirestore.instance.collection('users').doc(uid);
-    final docSnapshot = await docRef.get();
-
-    if (docSnapshot.exists) {
-      setState(() {
-        totalBalance = docSnapshot['balance']?.toDouble() ?? 0.0;
-      });
-      print('Total Balance for user $uid: $totalBalance');
-    } else {
-      setState(() {
-        totalBalance = 0.0; // Default jika dokumen belum ada
-      });
-      print('No balance data found for user $uid');
+      if (mounted) {
+        setState(() {
+          totalBalance = docSnapshot.exists
+              ? (docSnapshot['balance'] as num?)?.toDouble() ?? 0.0
+              : 0.0;
+        });
+      }
+    } catch (e) {
+      print('Error fetching total balance: $e');
     }
   }
 
   Future<void> fetchExchangeRates() async {
-    final String? apiUrl = dotenv.env['API_URL'];
-
-    if (apiUrl == null) {
-      print('API URL tidak ditemukan di .env');
-      setState(() {
-        isLoadingRates = false;
-      });
-      return;
-    }
-
     try {
+      final String? apiUrl = dotenv.env['API_URL'];
+      if (apiUrl == null) {
+        throw Exception('API URL not found in .env');
+      }
+
       final response = await http.get(Uri.parse(apiUrl));
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
-        if (data is Map<String, dynamic> && data['conversion_rates'] != null) {
-          setState(() {
-            exchangeRates = data['conversion_rates'];
-            isLoadingRates = false;
-          });
-        } else {
-          print('Invalid API response structure');
-          setState(() {
-            isLoadingRates = false;
-          });
+        if (data['conversion_rates'] != null) {
+          if (mounted) {
+            setState(() {
+              exchangeRates = data['conversion_rates'];
+              isLoadingRates = false;
+            });
+          }
         }
       } else {
-        print('HTTP Error: ${response.statusCode}');
+        throw Exception('HTTP Error: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('Error fetching exchange rates: $e');
+      if (mounted) {
         setState(() {
           isLoadingRates = false;
         });
       }
-    } catch (e) {
-      print('Error fetching exchange rates: $e');
-      setState(() {
-        isLoadingRates = false;
-      });
     }
   }
 
@@ -280,45 +269,54 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Widget _buildBalanceSection(double totalBalance) {
-    return Transform.translate(
-      offset: const Offset(0, -30), // Geser bagian My Balance ke atas
-      child: Column(
-        children: [
-          const Text(
-            "My Balance",
-            style: TextStyle(fontSize: 22, color: Colors.white),
-          ),
-          const SizedBox(height: 10),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                _isBalanceVisible ? formatter.format(totalBalance) : '******',
-                style: const TextStyle(
-                  fontSize: 36,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
+  return Transform.translate(
+    offset: const Offset(0, -30), // Geser bagian My Balance ke atas
+    child: Column(
+      children: [
+        const Text(
+          "My Balance",
+          style: TextStyle(fontSize: 22, color: Colors.white),
+        ),
+        const SizedBox(height: 10),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 200), // Batas lebar maksimal
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(
+                  _isBalanceVisible ? formatter.format(totalBalance) : '******',
+                  style: const TextStyle(
+                    fontSize: 36,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.center, // Pusatkan teks jika lebih pendek
                 ),
               ),
-              const SizedBox(width: 10),
-              GestureDetector(
-                onTap: () {
-                  setState(() {
-                    _isBalanceVisible = !_isBalanceVisible; // Toggle visibility
-                  });
-                },
-                child: Icon(
-                  _isBalanceVisible ? Icons.visibility : Icons.visibility_off,
-                  color: Colors.white,
-                  size: 20,
-                ),
+            ),
+            const SizedBox(width: 10),
+            GestureDetector(
+              onTap: () {
+                setState(() {
+                  _isBalanceVisible = !_isBalanceVisible; // Toggle visibility
+                });
+              },
+              child: Icon(
+                _isBalanceVisible ? Icons.visibility : Icons.visibility_off,
+                color: Colors.white,
+                size: 20,
               ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
+            ),
+          ],
+        ),
+      ],
+    ),
+  );
+}
+
 
   Widget _buildFeatureSection(BuildContext context) {
     return Transform.translate(
